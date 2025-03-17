@@ -7,6 +7,7 @@ name = "pypi"
 urllib3 = "2.2.0"
 Flask = "2.3.2"
 gunicorn = "22.0.0"
+requests = "2.29.0"
 
 [dev-packages]
 
