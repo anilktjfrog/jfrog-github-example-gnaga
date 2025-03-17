@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install pipenv
-      - uses: jfrog/frogbot@v2
+      - uses: jfrog/frogbot@v2.25.0
         with:
           oidc-provider-name: anilkt-github
           oidc-audience: anilkt-jfrog-oidc
