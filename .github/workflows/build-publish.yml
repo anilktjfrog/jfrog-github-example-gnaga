@@ -63,10 +63,10 @@ jobs:
             - name: Log in to JFrog Artifactory
               env:
                 JFROG_URL: ${{ vars.JF_URL }}
-                JFROG_USERNAME: ${{ secrets.JF_USERNAME }}
+                JFROG_USERNAME: ${{ secrets.JF_USER }}
                 JFROG_PASSWORD: ${{ secrets.JF_PASSWORD }}
               run: |
-                docker login ${{ vars.JF_URL }} -u "${{ secrets.JF_USERNAME }}" -p "${{ secrets.JF_PASSWORD }}"
+                docker login ${{ vars.JF_URL }} -u "${{ secrets.JF_USER }}" -p "${{ secrets.JF_PASSWORD }}"
 
 
             - name: Setup buildx instance
