@@ -12,8 +12,8 @@ jobs:
     build-publish-python:
         runs-on: ubuntu-latest              
         env:
-          DOCKER_REPO: 'nd-dev-docker'
-          IMAGE_NAME: 'my-very-cool-image:${{ github.run_number }}'
+          DOCKER_REPO: 'korber-workshop-docker-dev'
+          IMAGE_NAME: 'python-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
           DOCKER_CLI_EXPERIMENTAL: enabled
           CI: true
@@ -26,18 +26,16 @@ jobs:
               env:
                 JF_URL: https://${{ vars.JF_URL }}/
                 JF_PROJECT: ${{ vars.JF_PROJECT }}
-              with:
-                  oidc-provider-name: ps-jfrog-labs
-                  oidc-audience: ps-jfrog-oidc
+                JF_USER: ${{ secrets.JF_USER }}
+                JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
 
             - name: Checkout the repository
               uses: actions/checkout@v4
 
-
             - name: configure jfrog environment
               run: |
                 # Use a curated repository for python dependencies resolution
-                jf pip-config --repo-resolve=oidctest-pypi
+                jf pip-config --repo-resolve=korber-workshop-dev-pypi
 
             - name: configure environment
               run: |    
@@ -55,7 +53,7 @@ jobs:
 
             - name: publish python package
               run: |
-                jf rt u dist/ oidctest-pypi/example-projects/ --module=jfrog-python-example
+                jf rt u dist/ korber-workshop-dev-pypi/example-projects/ --module=jfrog-python-example
 
       
             - name: Set up QEMU
@@ -68,6 +66,15 @@ jobs:
                 username: ${{ steps.setup-cli.outputs.oidc-user }}
                 password: ${{ steps.setup-cli.outputs.oidc-token }}
 
+            - name: Log in to JFrog Artifactory
+              env:
+                JFROG_URL: ${{ vars.JF_URL }}
+                JFROG_USERNAME: ${{ secrets.JF_USERNAME }}
+                JFROG_PASSWORD: ${{ secrets.JF_PASSWORD }}
+              run: |
+                echo "$JFROG_PASSWORD" | docker login $JFROG_URL -u "$JFROG_USERNAME" --password-stdin
+
+
             - name: Setup buildx instance
               uses: docker/setup-buildx-action@v3
               with:
@@ -75,34 +82,11 @@ jobs:
                 platforms: linux/amd64,linux/arm64
                 install: true
 
-            - name: docker build through 
+            - name: docker build 
               run: |  
                 docker buildx ls
                 jf docker --version
                 jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --platform linux/amd64,linux/arm64 --metadata-file  metadata.json --push .
-                
-            - name: docker scan
-              run: |  
-                 jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-                 jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --vuln --fail=false 
-            #- name: docker build
-            #  run: |  
-            #    jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-amd64 --platform  linux/amd64 --load .
-            #    #docker images
-            #    jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-amd64                
-            #    jf docker push ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-amd64
-                
-            #    jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-arm64 --platform  linux/arm64 --load .
-            #    #docker images
-            #    jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-arm64                
-            #    jf docker push ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-arm64
-                
-            #    #echo "docker images scanned, now lets push a fat manifest and the images"
-            #    #docker manifest create  ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-amd64 ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}-arm64                
-            #    #echo "docker manifest created"
-            #    #docker manifest push ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
-            #    #echo "docker manifest pushed"
-            #    #docker image save -o myimage.tar localhost:5000/myimage:latest
                 
 
             - name: add docker package to build
@@ -114,35 +98,11 @@ jobs:
                  echo "digest=$digest"
                  echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@$digest" > metadata.json
                  jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
-            - name: python curation
-              run: |
-                rm -f Pipfile 
-                jf pip-config --repo-resolve=oidctest-pypi
-                jf audit || true
-                jf ca || true
+            
             - name: publish build info
               run: |
                 jf rt build-collect-env 
                 jf rt build-add-dependencies .
                 jf rt build-add-git
                 jf rt build-publish
-
-            - name: build scan
-              run: |   
-                echo $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
-                ls -ltra $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
-                jf build-scan --vuln --fail=false
-                
-            # - name: Write to workflow job summary
-            #   run: |
-            #         NOTE=$'>[!NOTE]\n>Frog Notes \n'
-            #         TIP=$'>[!TIP]\n>Hello JFrog\n'
-            #         IMPORTANT=$'>[!IMPORTANT]\n>Hello IMPORTANT NOTE:\n'
-            #         WARNING=$'>[!WARNING]\n>Hello WARNING NOTE\n'
-            #         CAUTION=$'>[!CAUTION]\n>Hello CAUTION NOTE\n'
-            #         echo "$NOTE" >> $GITHUB_STEP_SUMMARY
-            #         echo "$TIP" >> $GITHUB_STEP_SUMMARY
-            #         echo "$IMPORTANT" >> $GITHUB_STEP_SUMMARY
-            #         echo "$WARNING" >> $GITHUB_STEP_SUMMARY
-            #         echo "$CAUTION" >> $GITHUB_STEP_SUMMARY
 
