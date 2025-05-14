@@ -66,7 +66,7 @@ jobs:
                 JFROG_USERNAME: ${{ secrets.JF_USERNAME }}
                 JFROG_PASSWORD: ${{ secrets.JF_PASSWORD }}
               run: |
-                echo "$JFROG_PASSWORD" | docker login $JFROG_URL -u "$JFROG_USERNAME" --password-stdin
+                docker login ${{ vars.JF_URL }} -u "${{ secrets.JF_USERNAME }}" -p "${{ secrets.JF_PASSWORD }}"
 
 
             - name: Setup buildx instance
