@@ -13,7 +13,7 @@ jobs:
     build-publish-python:
         runs-on: ubuntu-latest              
         env:
-          DOCKER_REPO: 'korber-workshop-docker-dev'
+          DOCKER_REPO: 'test-federation-test-federation-docker'
           IMAGE_NAME: 'python-image:${{ github.run_number }}'
           JF_URL: https://${{ vars.JF_URL }}/
           DOCKER_CLI_EXPERIMENTAL: enabled
@@ -36,7 +36,7 @@ jobs:
             - name: configure jfrog environment
               run: |
                 # Use a curated repository for python dependencies resolution
-                jf pip-config --repo-resolve=korber-workshop-dev-pypi
+                jf pip-config --repo-resolve=test-federation-test-federation-python
 
             - name: configure environment
               run: |    
@@ -54,7 +54,7 @@ jobs:
 
             - name: publish python package
               run: |
-                jf rt u dist/ korber-workshop-dev-pypi/example-projects/ --module=jfrog-python-example
+                jf rt u dist/ test-federation-test-federation-python/example-projects/ --module=jfrog-python-example
 
       
             - name: Set up QEMU
