@@ -1,4 +1,4 @@
-name: build-publish-scan
+name: python-docker-build
 on:
     workflow_dispatch:
     #push:
@@ -36,7 +36,7 @@ jobs:
             - name: configure jfrog environment
               run: |
                 # Use a curated repository for python dependencies resolution
-                jf pip-config --repo-resolve=test-federation-test-federation-python
+                jf pip-config --repo-resolve=test-federation-test-federation-python-virtual
 
             - name: configure environment
               run: |    
@@ -54,7 +54,7 @@ jobs:
 
             - name: publish python package
               run: |
-                jf rt u dist/ test-federation-test-federation-python/example-projects/ --module=jfrog-python-example
+                jf rt u dist/ test-federation-test-federation-python-virtual/example-projects/ --module=jfrog-python-example
 
       
             - name: Set up QEMU
