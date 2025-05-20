@@ -1,0 +1,114 @@
+name: build-publish-scan
+on:
+    workflow_dispatch:
+    #push:
+    #    branches:
+    #     main
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  id-token: write # for creating OIDC tokens for signing.
+  packages: write # for uploading attestations.
+  contents: read
+jobs:
+    build-publish-python:
+        runs-on: ubuntu-latest              
+        env:
+          DOCKER_REPO: 'korber-workshop-docker-dev'
+          PYTHON_REPO: 'korber-workshop-dev-pypi'
+          IMAGE_NAME: 'python-docker:${{ github.run_number }}'
+          JF_URL: https://${{ vars.JF_URL }}/
+          OIDC_AUDIENCE: 'korber-workshop'
+          OIDC_PROVIDER: 'korber-workshop-github-oidc'
+          DOCKER_CLI_EXPERIMENTAL: enabled
+          CI: true
+          JFROG_CLI_REPORT_USAGE: true
+        
+        steps:
+            # Use the specific setup-cli branch
+            - name: Setup JFrog CLI
+              uses: jfrog/setup-jfrog-cli@v4
+              id: setup-cli
+              env:
+                JF_URL: https://${{ vars.JF_URL }}/
+                JF_PROJECT: ${{ vars.JF_PROJECT }}
+              with:
+                  oidc-provider-name: ${{ env.OIDC_PROVIDER }}
+                  oidc-audience: ${{ env.OIDC_AUDIENCE }}
+
+            - name: Checkout the repository
+              uses: actions/checkout@v4
+
+
+            - name: configure jfrog environment
+              run: |
+                # Use a curated repository for python dependencies resolution
+                jf pip-config --repo-resolve=${{ env.PYTHON_REPO }}
+
+            - name: configure environment
+              run: |    
+                pip install --upgrade pip     
+                python3 -m pip install --upgrade pip setuptools wheel sigstore
+                wheel -h
+                pip show setuptools
+                echo $VIRTUAL_ENV
+
+            - name: build project
+              run: |                                   
+                jf pip install -r requirements.txt  --module=jfrog-python-example                
+                python setup.py sdist bdist_wheel
+                cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
+
+            - name: publish python package
+              run: |
+                jf rt u dist/ ${{ env.PYTHON_REPO }}/example-projects/ --module=jfrog-python-example
+      
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3                 
+
+            - name: Authenticate Docker
+              uses: docker/login-action@v3
+              with:
+                registry: ${{ vars.JF_URL }}
+                username: ${{ steps.setup-cli.outputs.oidc-user }}
+                password: ${{ steps.setup-cli.outputs.oidc-token }}
+
+            - name: Setup buildx instance
+              uses: docker/setup-buildx-action@v3
+              with:
+                use: true
+                platforms: linux/amd64,linux/arm64
+                install: true
+
+            - name: docker build through 
+              run: |  
+                docker buildx ls
+                jf docker --version
+                jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --platform linux/amd64,linux/arm64 --metadata-file  metadata.json --push .
+                
+            - name: docker scan
+              run: |  
+                 jf docker pull ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}
+                 jf docker scan ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --vuln --fail=false                 
+
+            - name: add docker package to build
+              run: |  
+                 echo "----------------"
+                 cat metadata.json
+                 echo "----------------"
+                 digest=$(cat metadata.json | jq '.["containerimage.digest"]')
+                 echo "digest=$digest"
+                 echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@$digest" > metadata.json
+                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
+
+            - name: publish build info
+              run: |
+                jf rt build-collect-env 
+                jf rt build-add-dependencies .
+                jf rt build-add-git
+                jf rt build-publish
+
+            - name: build scan
+              run: |   
+                echo $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
+                ls -ltra $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
+                jf build-scan --vuln --fail=false
