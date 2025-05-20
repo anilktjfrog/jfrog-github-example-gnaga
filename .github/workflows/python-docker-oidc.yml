@@ -110,7 +110,8 @@ jobs:
 
             - name: "Add Builds to Indexing Configuration"
               run: |
-                jf xr curl "/api/v1/binMgr/builds" -H 'Content-Type: application/json' -d '{"names": ["${{env.BUILD_NAME}}"] }'
+                jf xr curl -X POST "/api/v1/binMgr/builds?projectKey=${{ vars.JF_PROJECT }}" -H 'Content-Type: application/json' -d '{"names": ["${{env.BUILD_NAME}}"] }'
+              continue-on-error: true
 
             - name: build scan
               run: |   
