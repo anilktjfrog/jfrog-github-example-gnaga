@@ -19,6 +19,8 @@ jobs:
           JF_URL: https://${{ vars.JF_URL }}/
           OIDC_AUDIENCE: 'korber-workshop'
           OIDC_PROVIDER: 'korber-workshop-github-oidc'
+          BUILD_NAME: "python-docker-build"
+          BUILD_ID: "ga-${{github.run_number}}"
           DOCKER_CLI_EXPERIMENTAL: enabled
           CI: true
           JFROG_CLI_REPORT_USAGE: true
@@ -37,7 +39,6 @@ jobs:
 
             - name: Checkout the repository
               uses: actions/checkout@v4
-
 
             - name: configure jfrog environment
               run: |
@@ -98,17 +99,21 @@ jobs:
                  digest=$(cat metadata.json | jq '.["containerimage.digest"]')
                  echo "digest=$digest"
                  echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@$digest" > metadata.json
-                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
+                 jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}}
 
             - name: publish build info
               run: |
-                jf rt build-collect-env 
-                jf rt build-add-dependencies .
-                jf rt build-add-git
-                jf rt build-publish
+                jf rt build-collect-env ${{env.BUILD_NAME}} ${{env.BUILD_ID}} 
+                jf rt build-add-dependencies . ${{env.BUILD_NAME}} ${{env.BUILD_ID}} 
+                jf rt build-add-git ${{env.BUILD_NAME}} ${{env.BUILD_ID}} 
+                jf rt build-publish ${{env.BUILD_NAME}} ${{env.BUILD_ID}} --detailed-summary=true
+
+            - name: "Add Builds to Indexing Configuration"
+              run: |
+                jf xr curl "/api/v1/binMgr/builds" -H 'Content-Type: application/json' -d '{"names": ["${{env.BUILD_NAME}}"] }'
 
             - name: build scan
               run: |   
                 echo $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
                 ls -ltra $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
-                jf build-scan --vuln --fail=false
+                jf bs ${{env.BUILD_NAME}} ${{env.BUILD_ID}} --fail=false --format=table --extended-table=true --rescan=false --vuln=true
