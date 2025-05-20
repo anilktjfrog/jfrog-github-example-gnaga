@@ -113,6 +113,11 @@ jobs:
                 jf xr curl -X POST "/api/v1/binMgr/builds?projectKey=${{ vars.JF_PROJECT }}" -H 'Content-Type: application/json' -d '{"names": ["${{env.BUILD_NAME}}"] }'
               continue-on-error: true
 
+            - name: Sleep for 60 seconds
+              uses: jakejarvis/wait-action@master
+              with:
+                time: '60s'
+                
             - name: build scan
               run: |   
                 echo $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
