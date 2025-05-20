@@ -1,4 +1,4 @@
-name: build-publish-scan
+name: python-docker-oidc
 on:
     workflow_dispatch:
     #push:
