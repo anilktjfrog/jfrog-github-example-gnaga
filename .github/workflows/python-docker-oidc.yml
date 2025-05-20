@@ -104,7 +104,7 @@ jobs:
             - name: publish build info
               run: |
                 jf rt build-collect-env ${{env.BUILD_NAME}} ${{env.BUILD_ID}} 
-                jf rt build-add-dependencies ${{env.BUILD_NAME}} ${{env.BUILD_ID}} 
+                jf rt build-add-dependencies ${{env.BUILD_NAME}} ${{env.BUILD_ID}} .
                 jf rt build-add-git ${{env.BUILD_NAME}} ${{env.BUILD_ID}} 
                 jf rt build-publish ${{env.BUILD_NAME}} ${{env.BUILD_ID}} --detailed-summary=true
 
