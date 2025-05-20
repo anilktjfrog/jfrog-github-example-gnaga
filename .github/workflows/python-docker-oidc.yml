@@ -117,4 +117,4 @@ jobs:
               run: |   
                 echo $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
                 ls -ltra $JFROG_CLI_COMMAND_SUMMARY_OUTPUT_DIR
-                jf bs ${{env.BUILD_NAME}} ${{env.BUILD_ID}} --fail=false --format=table --extended-table=true --rescan=false --vuln=true
+                jf bs ${{env.BUILD_NAME}} ${{env.BUILD_ID}} --fail=false --format=table --extended-table=true --rescan=false --vuln=true --project ${{ vars.JF_PROJECT }}
