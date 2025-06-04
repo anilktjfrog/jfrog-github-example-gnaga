@@ -45,6 +45,10 @@ jobs:
                 # Use a curated repository for python dependencies resolution
                 jf pip-config --repo-resolve=${{ env.PYTHON_REPO }}
 
+            - name: "Install pipenv"
+              run: |
+                pip install pipenv
+
             - name: "Xray"  # https://docs.jfrog-applications.jfrog.io/jfrog-applications/jfrog-cli/cli-for-jfrog-security
               # scan for Xray: Source code dependencies and JAS: Secrets Detection, IaC, Vulnerabilities Contextual Analysis 'SAST'
               timeout-minutes: 15  # ref: https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idstepstimeout-minutes
