@@ -3,7 +3,7 @@
     git:
       # [Mandatory]
       # Name of the git repository to scan
-      repoName: jfrog-github-example
+      repoName: jfrog-github-example-gnaga
 
       # [Mandatory]
       # List of branches to scan
