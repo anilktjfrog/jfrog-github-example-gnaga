@@ -36,25 +36,34 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          
       - run: pip install pipenv
       
       - uses: jfrog/frogbot@v2
         with:
-          oidc-provider-name: ps-jfrog-labs
-          oidc-audience: ps-jfrog-oidc
+          oidc-provider-name: 'korber-workshop-github-oidc'
+          oidc-audience: 'korber-workshop'
         env:
           JFROG_CLI_LOG_LEVEL: DEBUG
+
+          # [Mandatory]
+          # JFrog platform URL
+          JF_URL: https://${{ vars.JF_URL }}/
+
+          # [Mandatory]
+          # The GitHub token automatically generated for the job
+          JF_GIT_TOKEN: ${{ secrets.JF_GIT_TOKEN }}
+
+          # JFROG Project
+          JF_PROJECT: ${{ vars.JF_PROJECT }}
+
           # [Mandatory if the two conditions below are met]
           # 1. The project uses npm, yarn 2, NuGet or .NET to download its dependencies
           # 2. The `installCommand` variable isn't set in your frogbot-config.yml file.
           #
           # The command that installs the project dependencies (e.g "npm i", "nuget restore" or "dotnet restore")
           # JF_INSTALL_DEPS_CMD: ""
-
-          # [Mandatory]
-          # JFrog platform URL
-          JF_URL: https://${{ vars.JF_URL }}/
-
+          
           # [Mandatory if JF_USER and JF_PASSWORD are not provided]
           # JFrog access token with 'read' permissions on Xray service
           #JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
@@ -67,10 +76,6 @@ jobs:
           # JFrog password. Must be provided with JF_USER
           # JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
 
-          # [Mandatory]
-          # The GitHub token automatically generated for the job
-          JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
           # [Optional]
           # If the machine that runs Frogbot has no access to the internat, set the name of a remote repository
           # in Artifactory, which proxies https://releases.jfrog.io/artifactory
@@ -82,4 +87,4 @@ jobs:
           # dependencies from a virtual repository in Artifactory, set the name of of the repository. There's no
           # need to set this value, if it is set in the frogbot-config.yml file.
           # JF_DEPS_REPO: ""
-          JF_PROJECT: ${{ vars.JF_PROJECT }}
+          
