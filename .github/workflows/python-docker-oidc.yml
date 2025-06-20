@@ -26,6 +26,28 @@ jobs:
           JFROG_CLI_REPORT_USAGE: true
         
         steps:
+            - name: Debug OIDC Claims
+              uses: github/actions-oidc-debugger@main
+              with:
+                audience: '${{ github.server_url }}/${{ github.repository_owner }}'
+                
+            - name: Get ID token
+              shell: bash
+              run: |
+                ID_TOKEN=$(curl -sLS -H "User-Agent: actions/oidc-client" -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                  "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${env.OIDC_AUDIENCE}" | jq .value | tr -d '"')
+                echo "ID_TOKEN=${ID_TOKEN}" >> $GITHUB_ENV        
+        
+            - name: Exchange ID token with access
+              shell: bash
+              id: token
+              env:
+                ID_TOKEN: ${{ env.ID_TOKEN }}
+                JFROG_URL: "https://your_instance_name.jfrog.io/access/api/v1/oidc/token"
+              run: |
+                ACCESS_TOKEN=$(curl -XPOST "${JFROG_URL}" -d "{\"grant_type\": \"urn:ietf:params:oauth:grant-type:token-exchange\", \"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\", \"subject_token\": \"$ID_TOKEN\", \"provider_name\": \"${env.OIDC_PROVIDER}\"}" -H "Content-Type: application/json" | jq .access_token | tr -d '"')
+                echo "ACCESS_TOKEN=${ACCESS_TOKEN}" >> $GITHUB_OUTPUT
+                
             # Use the specific setup-cli branch
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
