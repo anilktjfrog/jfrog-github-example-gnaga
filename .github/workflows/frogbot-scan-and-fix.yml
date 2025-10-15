@@ -36,8 +36,8 @@ jobs:
       
       - uses: jfrog/frogbot@v2
         with:
-          oidc-provider-name: 'korber-workshop-github-oidc'
-          oidc-audience: 'korber-workshop'
+          oidc-provider-name: ${{ vars.OIDC_PROVIDER }}
+          oidc-audience: ${{ vars.OIDC_PROVIDER }}
         env:
           # [Mandatory if the two conditions below are met]
           # 1. The project uses npm, yarn 2, NuGet or .NET to download its dependencies
@@ -48,9 +48,9 @@ jobs:
 
           # [Mandatory]
           # JFrog platform URL
-          JF_URL: https://${{ vars.JF_URL }}/
+          JF_URL: ${{ vars.JF_URL }}
           JF_GIT_AGGREGATE_FIXES: "TRUE"
-          JF_WATCHES: "Korber-Critical-Serverity-Watch"
+          #JF_WATCHES: ${{ vars.XRAY_WATCH }}
           JF_INCLUDE_ALL_VULNERABILITIES: "FALSE"
 
           # [Mandatory if JF_USER and JF_PASSWORD are not provided]
