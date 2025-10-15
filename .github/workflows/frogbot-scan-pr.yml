@@ -41,14 +41,14 @@ jobs:
       
       - uses: jfrog/frogbot@v2
         with:
-          oidc-provider-name: 'korber-workshop-github-oidc'
-          oidc-audience: 'korber-workshop'
+          oidc-provider-name: ${{ vars.OIDC_PROVIDER }}
+          oidc-audience: ${{ vars.OIDC_PROVIDER }}
         env:
           JFROG_CLI_LOG_LEVEL: DEBUG
 
           # [Mandatory]
           # JFrog platform URL
-          JF_URL: https://${{ vars.JF_URL }}/
+          JF_URL: ${{ vars.JF_URL }}
 
           # [Mandatory]
           # The GitHub token automatically generated for the job
