@@ -49,7 +49,7 @@ jobs:
 
           # [Mandatory]
           # JFrog platform URL
-          JF_URL: https://${{ vars.JF_URL }}/
+          JF_URL: https://intbmc.jfrog.io
           #JF_GIT_AGGREGATE_FIXES: "TRUE"
           #JF_WATCHES: ${{ vars.XRAY_WATCH }}
           #JF_INCLUDE_ALL_VULNERABILITIES: "FALSE"
