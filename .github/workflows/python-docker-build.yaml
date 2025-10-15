@@ -13,22 +13,33 @@ jobs:
     build-publish-python:
         runs-on: ubuntu-latest              
         env:
-          DOCKER_REPO: 'test-federation-test-federation-docker'
+          DOCKER_REPO: ${{ vars.DOCKER_REPO }}
+          PYTHON_REPO: ${{ vars.PYTHON_REPO }}
           IMAGE_NAME: 'python-image:${{ github.run_number }}'
-          JF_URL: https://${{ vars.JF_URL }}/
+          PYTHON_MODULE: 'jfrog-python-example'          
           DOCKER_CLI_EXPERIMENTAL: enabled
           CI: true
           JFROG_CLI_REPORT_USAGE: true
+          JFROG_CLI_BUILD_PROJECT: ${{ vars.JF_PROJECT }}
+          JFROG_CLI_BUILD_NAME: 'python-docker-build'
+          JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
+          JF_URL: ${{ vars.JF_URL }}
+          OIDC_PROVIDER: ${{ vars.OIDC_PROVIDER }}
+          JF_USER: ${{ secrets.JF_USER }}
+          JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
         steps:
             # Use the specific setup-cli branch
             - name: Setup JFrog CLI
               uses: jfrog/setup-jfrog-cli@v4
               id: setup-cli
               env:
-                JF_URL: https://${{ vars.JF_URL }}/
-                JF_PROJECT: ${{ vars.JF_PROJECT }}
-                JF_USER: ${{ secrets.JF_USER }}
-                JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+                JF_URL: https://${{ env.JF_URL }}/
+                JF_PROJECT: ${{ env.JFROG_CLI_BUILD_PROJECT }}
+                #JF_USER: ${{ secrets.JF_USER }}
+                #JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+              with:
+               oidc-provider-name: "${{ env.OIDC_PROVIDER }}"
+               oidc-audience: "${{ env.OIDC_PROVIDER }}"
 
             - name: Checkout the repository
               uses: actions/checkout@v4
@@ -36,7 +47,7 @@ jobs:
             - name: configure jfrog environment
               run: |
                 # Use a curated repository for python dependencies resolution
-                jf pip-config --repo-resolve=test-federation-test-federation-python-virtual
+                jf pip-config --repo-resolve=${{ env.PYTHON_REPO }} --repo-deploy=${{ env.PYTHON_REPO }}
 
             - name: configure environment
               run: |    
@@ -48,25 +59,21 @@ jobs:
 
             - name: build project
               run: |                                   
-                jf pip install -r requirements.txt  --module=jfrog-python-example                
+                jf pip install -r requirements.txt  --module=${{ env.PYTHON_MODULE }}           
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
 
             - name: publish python package
               run: |
-                jf rt u dist/ test-federation-test-federation-python-virtual/example-projects/ --module=jfrog-python-example
+                jf rt u dist/ ${{ env.PYTHON_REPO }}/example-projects/ --module=${{ env.PYTHON_MODULE }}
 
       
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v3                 
 
             - name: Log in to JFrog Artifactory
-              env:
-                JFROG_URL: ${{ vars.JF_URL }}
-                JFROG_USERNAME: ${{ secrets.JF_USER }}
-                JFROG_PASSWORD: ${{ secrets.JF_PASSWORD }}
               run: |
-                docker login ${{ vars.JF_URL }} -u "${{ secrets.JF_USER }}" -p "${{ secrets.JF_PASSWORD }}"
+                docker login ${{ env.JF_URL }} -u "${{ env.JF_USER }}" -p "${{ env.JF_PASSWORD }}"
 
 
             - name: Setup buildx instance
@@ -80,7 +87,7 @@ jobs:
               run: |  
                 docker buildx ls
                 jf docker --version
-                jf docker build --tag ${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --platform linux/amd64,linux/arm64 --metadata-file  metadata.json --push .
+                jf docker build --tag ${{ env.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }} --platform linux/amd64,linux/arm64 --metadata-file  metadata.json --push .
                 
 
             - name: add docker package to build
@@ -90,7 +97,7 @@ jobs:
                  echo "----------------"
                  digest=$(cat metadata.json | jq '.["containerimage.digest"]')
                  echo "digest=$digest"
-                 echo "${{ vars.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@$digest" > metadata.json
+                 echo "${{ env.JF_URL }}/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}@$digest" > metadata.json
                  jf rt build-docker-create ${{ env.DOCKER_REPO }} --image-file metadata.json 
             
             - name: publish build info
