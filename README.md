@@ -1,1 +1,1 @@
-# jfrog-github-example-test.
+# jfrog-github-example-test
