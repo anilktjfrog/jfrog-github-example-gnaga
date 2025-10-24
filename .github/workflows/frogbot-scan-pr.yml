@@ -50,6 +50,7 @@ jobs:
           # JFrog platform URL
           JF_URL: https://${{ vars.JF_URL }}
           JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+          JF_REQUIREMENTS_FILE: "requirements.txt"
           #JF_WATCHES: "critical_cve_watch"
 
           # [Mandatory]
