@@ -4,3 +4,4 @@ nltk
 redis == 4.6.0
 Flask==2.3.1
 gunicorn==22.0.0
+Pillow==2.8.1
