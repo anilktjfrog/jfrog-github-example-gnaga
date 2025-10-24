@@ -10,7 +10,7 @@
       branches:
         - main
     scan:
-      includeAllVulnerabilities: true
+      includeAllVulnerabilities: false
       failOnSecurityIssues: false
       # projects:
       #   - workingDirs:
