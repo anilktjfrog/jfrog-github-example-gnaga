@@ -37,11 +37,6 @@ jobs:
               with:
                oidc-provider-name: "${{ env.OIDC_PROVIDER }}"
                oidc-audience: "${{ env.OIDC_PROVIDER }}"
-
-            - name: Debug OIDC Claims
-              uses: github/actions-oidc-debugger@main
-              with:
-                audience: '${{ github.server_url }}/${{ github.repository_owner }}'
             
             - name: Check Jfrog connectivity
               run: |
