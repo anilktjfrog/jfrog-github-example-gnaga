@@ -59,6 +59,7 @@ jobs:
 
           # JFROG Project
           JF_PROJECT: ${{ vars.JF_PROJECT }}
+          JF_REQUIREMENTS_FILE: "requirements.txt"
 
           # [Mandatory if the two conditions below are met]
           # 1. The project uses npm, yarn 2, NuGet or .NET to download its dependencies
