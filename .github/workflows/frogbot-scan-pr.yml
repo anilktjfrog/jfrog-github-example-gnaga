@@ -50,7 +50,7 @@ jobs:
           # JFrog platform URL
           JF_URL: https://${{ env.JF_URL }}
           JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
-          JF_WATCHES: "critical_cve_watch"
+          JF_WATCHES: ${{ vars.JF_WATCHES }}
 
           # [Mandatory]
           # The GitHub token automatically generated for the job
