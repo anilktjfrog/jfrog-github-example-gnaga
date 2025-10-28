@@ -10,7 +10,7 @@ permissions:
   packages: write # for uploading attestations.
   contents: read
 jobs:
-    build-publish-python:
+    OIDC_Connectivity:
         runs-on: ubuntu-latest
         env:          
           CI: true
