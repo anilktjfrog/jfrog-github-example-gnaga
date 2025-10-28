@@ -17,7 +17,7 @@ jobs:
           JFROG_CLI_REPORT_USAGE: true
           JFROG_CLI_LOG_LEVEL: true
           JFROG_CLI_BUILD_PROJECT: ${{ vars.JF_PROJECT }}
-          JFROG_CLI_BUILD_NAME: 'python-docker-build'
+          JFROG_CLI_BUILD_NAME: 'OIDC_Connectivity'
           JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
           JF_URL: ${{ vars.JF_URL }}
           OIDC_PROVIDER: ${{ vars.OIDC_PROVIDER }}          
