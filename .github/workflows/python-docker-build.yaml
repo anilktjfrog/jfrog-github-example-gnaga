@@ -58,11 +58,19 @@ jobs:
                 pip show setuptools
                 echo $VIRTUAL_ENV
 
+            - name: Audit the code
+              run: |
+                jf audit --sca=true --licenses=true --vuln=true --format=table --extended-table=true --threads=100 --fail=false --watches ${{ vars.JF_WATCHES }}
+
             - name: build project
               run: |                                   
                 jf pip install -r requirements.txt  --module=${{ env.PYTHON_MODULE }}           
                 python setup.py sdist bdist_wheel
                 cd dist && echo "hashes=$(sha256sum * | base64 -w0)" >> $GITHUB_OUTPUT
+
+            - name: Scan the python package
+              run: |
+                jf scan . --extended-table=true
 
             - name: publish python package
               run: |
