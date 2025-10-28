@@ -1,4 +1,4 @@
-name: python-docker-build
+name: OIDC_Connectivity
 on:
     workflow_dispatch:
     #push:
