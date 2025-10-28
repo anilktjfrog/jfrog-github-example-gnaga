@@ -1,0 +1,55 @@
+name: python-docker-build
+on:
+    workflow_dispatch:
+    #push:
+    #    branches:
+    #     main-test
+permissions:
+  actions: read # for detecting the Github Actions environment.
+  id-token: write # for creating OIDC tokens for signing.
+  packages: write # for uploading attestations.
+  contents: read
+jobs:
+    build-publish-python:
+        runs-on: ubuntu-latest
+        env:          
+          CI: true
+          JFROG_CLI_REPORT_USAGE: true
+          JFROG_CLI_LOG_LEVEL: true
+          JFROG_CLI_BUILD_PROJECT: ${{ vars.JF_PROJECT }}
+          JFROG_CLI_BUILD_NAME: 'python-docker-build'
+          JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
+          JF_URL: ${{ vars.JF_URL }}
+          OIDC_PROVIDER: ${{ vars.OIDC_PROVIDER }}          
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@v4
+
+            # Use the specific setup-cli branch
+            - name: Setup JFrog CLI
+              uses: jfrog/setup-jfrog-cli@v4
+              id: setup-cli
+              env:
+                JF_URL: https://${{ env.JF_URL }}/
+                JF_PROJECT: ${{ env.JFROG_CLI_BUILD_PROJECT }}
+                #JF_USER: ${{ secrets.JF_USER }}
+                #JF_PASSWORD: ${{ secrets.JF_PASSWORD }}
+              with:
+               oidc-provider-name: "${{ env.OIDC_PROVIDER }}"
+               oidc-audience: "${{ env.OIDC_PROVIDER }}"
+
+            - name: Debug OIDC Claims
+              uses: github/actions-oidc-debugger@main
+              with:
+                audience: '${{ github.server_url }}/${{ github.repository_owner }}'
+            
+            - name: Check Jfrog connectivity
+              run: |
+                echo "Jfrog CLI Version"
+                jf --version
+
+                echo "Check Jfrog Connectivity"
+                jf rt ping            
+
+                echo "Get List of virtual Repositories"
+                jf rt curl "/api/repositories?type=virtual"
