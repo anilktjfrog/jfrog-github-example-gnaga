@@ -60,7 +60,7 @@ jobs:
 
             - name: Audit the code
               run: |
-                jf audit --sca=true --licenses=true --vuln=true --format=table --extended-table=true --threads=100 --fail=false
+                jf audit --sca=true --requirements-file requirements.txt --licenses=true --vuln=true --format=table --extended-table=true --threads=100 --fail=false
 
             - name: build project
               run: |                                   
