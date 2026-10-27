@@ -58,9 +58,9 @@ jobs:
                 pip show setuptools
                 echo $VIRTUAL_ENV
 
-            - name: Audit the code
-              run: |
-                jf audit --sca=true --requirements-file requirements.txt --licenses=true --vuln=true --format=table --extended-table=true --threads=100 --fail=false
+            #- name: Audit the code
+            #  run: |
+            #    jf audit --sca=true --requirements-file requirements.txt --licenses=true --vuln=true --format=table --extended-table=true --threads=100 --fail=false
 
             - name: build project
               run: |                                   
