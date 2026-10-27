@@ -60,7 +60,7 @@ jobs:
 
             - name: Audit the code
               run: |
-                jf audit --sca=true --licenses=true --vuln=true --format=table --extended-table=true --threads=100 --fail=false --watches ${{ vars.JF_WATCHES }}
+                jf audit --sca=true --licenses=true --vuln=true --format=table --extended-table=true --threads=100 --fail=false --project=${{ env.JFROG_CLI_BUILD_PROJECT }}
 
             - name: build project
               run: |                                   
